@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -18,8 +17,6 @@ func NewApp() (App, error) {
 func (app *App) Run() {
 	var wg sync.WaitGroup
 
-	// wg.Add(1)
-	// go startHealtServer(wg)
 	// wg.Add(1)
 	// go startTegramDaemon(wg)
 
@@ -75,23 +72,6 @@ func startTegramDaemon(wg sync.WaitGroup) {
 	}
 	wg.Done()
 }
-func startHealtServer(wg sync.WaitGroup) {
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-
-	router := gin.New()
-	router.Use(gin.Logger())
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "todo bien pesho", "status": http.StatusOK})
-	})
-
-	router.Run(":" + port)
-	wg.Done()
-}
 func startTelegramWebHook(wg sync.WaitGroup) {
 	token := os.Getenv("TELEGRAM_TOKEN")
 	if token == "" {
@@ -131,6 +111,14 @@ func startTelegramWebHook(wg sync.WaitGroup) {
 	go http.ListenAndServe(":"+port, nil)
 
 	for update := range updates {
-		log.Printf("%+v\n", update)
+		if update.Message != nil { // If we got a message
+			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ariel trolo")
+			msg.ReplyToMessageID = update.Message.MessageID
+
+			bot.Send(msg)
+		}
 	}
+	wg.Done()
 }
