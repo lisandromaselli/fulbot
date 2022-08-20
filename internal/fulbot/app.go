@@ -103,7 +103,7 @@ func startTelegramWebHook(wg sync.WaitGroup) {
 		log.Panic(err)
 	}
 
-	webhookUrl := os.Getenv("	")
+	webhookUrl := os.Getenv("WEBHOOK_FULL_URL")
 
 	wh, _ := tgbotapi.NewWebhook(webhookUrl)
 
