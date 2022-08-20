@@ -18,10 +18,13 @@ func NewApp() (App, error) {
 func (app *App) Run() {
 	var wg sync.WaitGroup
 
+	// wg.Add(1)
+	// go startHealtServer(wg)
+	// wg.Add(1)
+	// go startTegramDaemon(wg)
+
 	wg.Add(1)
-	go startHealtServer(wg)
-	wg.Add(1)
-	go startTegramDaemon(wg)
+	go startTelegramWebHook(wg)
 
 	wg.Wait()
 }
@@ -88,4 +91,46 @@ func startHealtServer(wg sync.WaitGroup) {
 
 	router.Run(":" + port)
 	wg.Done()
+}
+func startTelegramWebHook(wg sync.WaitGroup) {
+	token := os.Getenv("TELEGRAM_TOKEN")
+	if token == "" {
+		log.Fatal("Telegram token not found")
+	}
+
+	bot, err := tgbotapi.NewBotAPI(token)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	webhookUrl := os.Getenv("	")
+
+	wh, _ := tgbotapi.NewWebhook(webhookUrl)
+
+	_, err = bot.Request(wh)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	info, err := bot.GetWebhookInfo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if info.LastErrorDate != 0 {
+		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+	}
+
+	updates := bot.ListenForWebhook("/webhooks")
+
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+	go http.ListenAndServe(":"+port, nil)
+
+	for update := range updates {
+		log.Printf("%+v\n", update)
+	}
 }
