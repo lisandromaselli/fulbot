@@ -43,8 +43,8 @@ func (t *TelegramBot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 	return t.bot.GetUpdatesChan(u), nil
 
 }
-func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.UpdatesChannel, error) {
-	wh, err := tgbotapi.NewWebhook(webhookUrl)
+func (t *TelegramBot) StartTelegramWebHook(port, domain, path string) (tgbotapi.UpdatesChannel, error) {
+	wh, err := tgbotapi.NewWebhook(domain + path)
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +55,8 @@ func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.Up
 	}
 	log.Print("Successfully suscribed to the webhook")
 
-	updates := t.bot.ListenForWebhook("/webhooks")
-	go http.ListenAndServe("0.0.0.0:"+port, nil)
+	updates := t.bot.ListenForWebhook(path)
+	go http.ListenAndServe(":"+port, nil)
 
 	return updates, nil
 }

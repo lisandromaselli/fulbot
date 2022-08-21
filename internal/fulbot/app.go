@@ -20,7 +20,8 @@ func (app *App) Run() {
 	if token == "" {
 		log.Fatal("Telegram token not found")
 	}
-	webhookUrl := os.Getenv("WEBHOOK_FULL_URL")
+	domainUrl := os.Getenv("DOMAIN")
+	path := os.Getenv("WEBHOOK_SECRET_PATH")
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("$PORT must be set")
@@ -32,7 +33,7 @@ func (app *App) Run() {
 	}
 
 	log.Printf("Starting telegram webhook")
-	updates, err := bot.StartTelegramWebHook(webhookUrl, port)
+	updates, err := bot.StartTelegramWebHook(port, domainUrl, path)
 	if err != nil {
 		log.Printf("error starting webhook %s", err.Error())
 		return
