@@ -53,6 +53,7 @@ func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.Up
 	if err != nil {
 		return nil, err
 	}
+	log.Print("Successfully suscribed to the webhook")
 
 	updates := t.bot.ListenForWebhook("/webhooks")
 	go http.ListenAndServe("0.0.0.0:"+port, nil)
