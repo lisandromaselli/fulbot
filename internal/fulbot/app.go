@@ -22,6 +22,9 @@ func (app *App) Run() {
 	}
 	webhookUrl := os.Getenv("WEBHOOK_FULL_URL")
 	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
 
 	bot, err := telegram.NewTelegramBot(token)
 	if err != nil {
