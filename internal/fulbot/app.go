@@ -31,6 +31,7 @@ func (app *App) Run() {
 		return
 	}
 
+	log.Printf("Starting telegram webhook")
 	updates, err := bot.StartTelegramWebHook(webhookUrl, port)
 	if err != nil {
 		return

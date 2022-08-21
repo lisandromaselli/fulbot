@@ -50,9 +50,11 @@ func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.Up
 	}
 
 	suscribeWebhook(t.bot, wh)
+
+	updates := t.bot.ListenForWebhook("/webhooks")
 	go http.ListenAndServe(":"+port, nil)
 
-	return t.bot.ListenForWebhook("/webhooks"), nil
+	return updates, nil
 }
 
 func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) (err error) {
