@@ -48,6 +48,7 @@ func (app *App) Run() {
 		return nil
 	}))
 
+	log.Printf("starting event listening")
 	consumer := NewUpdateConsumer(updates, manager)
 	consumer.Run()
 }
