@@ -55,7 +55,7 @@ func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.Up
 	}
 
 	updates := t.bot.ListenForWebhook("/webhooks")
-	go http.ListenAndServe(":"+port, nil)
+	go http.ListenAndServe("0.0.0.0:"+port, nil)
 
 	return updates, nil
 }
