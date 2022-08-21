@@ -18,7 +18,6 @@ func NewUpdateConsumer(channel tgbotapi.UpdatesChannel, manager EventManager) *U
 
 func (c UpdateConsumer) Run() {
 	for update := range c.UpdatesChannel {
-
 		c.manager.ProcessUpdate(update)
 	}
 }

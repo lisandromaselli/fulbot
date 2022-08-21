@@ -8,16 +8,21 @@ import (
 )
 
 type TelegramBot struct {
-	bot *tgbotapi.BotAPI
+	Client *tgbotapi.BotAPI
+}
+
+type WebHookConfig struct {
+	Port, Domain, WebhookSecretPath string
 }
 
 func NewTelegramBot(token string) (*TelegramBot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
+	bot.Debug = true
 	if err != nil {
 		return nil, err
 	}
 	return &TelegramBot{
-		bot: bot,
+		Client: bot,
 	}, nil
 }
 
@@ -40,23 +45,23 @@ func (t *TelegramBot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 		tgbotapi.UpdateTypeChatMember,
 	}
 
-	return t.bot.GetUpdatesChan(u), nil
+	return t.Client.GetUpdatesChan(u), nil
 
 }
-func (t *TelegramBot) StartTelegramWebHook(port, domain, path string) (tgbotapi.UpdatesChannel, error) {
-	wh, err := tgbotapi.NewWebhook(domain + path)
+func (t *TelegramBot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChannel, error) {
+	wh, err := tgbotapi.NewWebhook(config.Domain + config.WebhookSecretPath)
 	if err != nil {
 		return nil, err
 	}
 
-	err = suscribeWebhook(t.bot, wh)
+	err = suscribeWebhook(t.Client, wh)
 	if err != nil {
 		return nil, err
 	}
 	log.Print("Successfully suscribed to the webhook")
 
-	updates := t.bot.ListenForWebhook(path)
-	go http.ListenAndServe(":"+port, nil)
+	updates := t.Client.ListenForWebhook(config.WebhookSecretPath)
+	go http.ListenAndServe(":"+config.Port, nil)
 
 	return updates, nil
 }
@@ -76,8 +81,4 @@ func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) error {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 	return nil
-}
-
-func (t *TelegramBot) Send(msg tgbotapi.MessageConfig) {
-	t.bot.Send(msg)
 }

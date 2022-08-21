@@ -1,10 +1,12 @@
 package fulbot
 
 import (
-	"fulbot/internal/fulbot/handlers"
+	"errors"
+	"fulbot/internal/fulbot/handlers/callbacksquery"
+	"fulbot/internal/fulbot/handlers/commands"
 	"fulbot/internal/pkg/telegram"
-	"log"
-	"os"
+
+	"github.com/rs/zerolog/log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -16,41 +18,47 @@ func NewApp() (App, error) {
 }
 
 func (app *App) Run() {
-	token := os.Getenv("TELEGRAM_TOKEN")
-	if token == "" {
-		log.Fatal("Telegram token not found")
-	}
-	domainUrl := os.Getenv("DOMAIN")
-	path := os.Getenv("WEBHOOK_SECRET_PATH")
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-
-	bot, err := telegram.NewTelegramBot(token)
+	config, err := LoadConfig()
 	if err != nil {
+		log.Error().Err(err).Msg("Error loading config")
 		return
 	}
 
-	log.Printf("Starting telegram webhook")
-	updates, err := bot.StartTelegramWebHook(port, domainUrl, path)
+	bot, err := telegram.NewTelegramBot(config.TelegramToken)
 	if err != nil {
-		log.Printf("error starting webhook %s", err.Error())
+		log.Error().Err(err).Msg("Error building telegram bot")
+		return
+	}
+
+	updates, err := openUpdatesConnection(bot, config)
+	if err != nil {
+		log.Error().Err(err).Msg("Error opening updates connection")
 		return
 	}
 
 	manager := NewUpdateManager()
-	manager.AddHandler(handlers.NewCommandHandler("hi", func(u tgbotapi.Update) error {
-		log.Printf("[%s] %s", u.Message.From.UserName, u.Message.Text)
+	manager.AddHandler(commands.NewHiCommand(bot))
+	manager.AddHandler(commands.NewMatchCommand(bot))
+	manager.AddHandler(callbacksquery.NewCallbackQueryMatch(bot))
 
-		msg := tgbotapi.NewMessage(u.Message.Chat.ID, "Ariel trolo")
-		msg.ReplyToMessageID = u.Message.MessageID
-
-		bot.Send(msg)
-		return nil
-	}))
-
-	log.Printf("starting event listening")
+	log.Info().Msg("Starting event listening")
 	consumer := NewUpdateConsumer(updates, manager)
 	consumer.Run()
+}
+
+func openUpdatesConnection(bot *telegram.TelegramBot, config *Config) (updates tgbotapi.UpdatesChannel, err error) {
+	if config.ConnectionStrategy == "WEBHOOK" {
+		log.Info().Msg("Starting telegram webhook")
+		updates, err = bot.StartTelegramWebHook(config.TelegramWebHookConfig())
+		return
+	}
+
+	if config.ConnectionStrategy == "POOLING" {
+		log.Info().Msg("Starting telegram pooling")
+		updates, err = bot.StartTegramDaemon()
+		return
+	}
+
+	err = errors.New("Invalid connection strategy")
+	return
 }
