@@ -60,21 +60,21 @@ func (t *TelegramBot) StartTelegramWebHook(port, webhookUrl string) (tgbotapi.Up
 	return updates, nil
 }
 
-func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) (err error) {
-	_, err = bot.Request(wh)
+func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) error {
+	_, err := bot.Request(wh)
 	if err != nil {
-		return
+		return err
 	}
 
 	info, err := bot.GetWebhookInfo()
 	if err != nil {
-		return
+		return err
 	}
 
 	if info.LastErrorDate != 0 {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
-	return
+	return nil
 }
 
 func (t *TelegramBot) Send(msg tgbotapi.MessageConfig) {
