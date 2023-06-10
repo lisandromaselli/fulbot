@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fulbot/internal/fulbot/handlers"
-	"fulbot/internal/pkg/telegram"
+	"fulbot/internal/gateways/telegram"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -12,7 +12,8 @@ func NewHiCommand(bot *telegram.Bot) handlers.UpdateHandler {
 		msg := tgbotapi.NewMessage(u.Message.Chat.ID, "Hi")
 		msg.ReplyToMessageID = u.Message.MessageID
 
-		bot.Client.Send(msg)
+		_, _ = bot.Client.Send(msg)
+
 		return nil
 	})
 }

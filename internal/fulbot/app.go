@@ -2,15 +2,18 @@ package fulbot
 
 import (
 	"errors"
+	"fmt"
 
 	"fulbot/internal/fulbot/handlers/callbacksquery"
 	"fulbot/internal/fulbot/handlers/commands"
-	"fulbot/internal/pkg/telegram"
+	"fulbot/internal/gateways/telegram"
 
 	"github.com/rs/zerolog/log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
+
+var errInvalidStrategy = errors.New("invalid connection strategy")
 
 type App struct{}
 
@@ -43,23 +46,29 @@ func (app *App) Run() {
 	manager.AddHandler(callbacksquery.NewCallbackQueryMatch(bot))
 
 	log.Info().Msg("Starting event listening")
+
 	consumer := NewUpdateConsumer(updates, manager)
 	consumer.Run()
 }
 
-func openUpdatesConnection(bot *telegram.Bot, config *Config) (updates tgbotapi.UpdatesChannel, err error) {
+func openUpdatesConnection(bot *telegram.Bot, config *Config) (tgbotapi.UpdatesChannel, error) {
 	if config.ConnectionStrategy == "WEBHOOK" {
-		log.Info().Msg("Starting telegram webhook")
-		updates, err = bot.StartTelegramWebHook(config.TelegramWebHookConfig())
-		return
+		u, err := bot.StartTelegramWebHook(config.TelegramWebHookConfig())
+		if err != nil {
+			return nil, fmt.Errorf("cannot update webhook connection %w", err)
+		}
+
+		return u, nil
 	}
 
 	if config.ConnectionStrategy == "POOLING" {
-		log.Info().Msg("Starting telegram pooling")
-		updates, err = bot.StartTegramDaemon()
-		return
+		u, err := bot.StartTegramDaemon()
+		if err != nil {
+			return nil, fmt.Errorf("cannot update pooling connection %w", err)
+		}
+
+		return u, nil
 	}
 
-	err = errors.New("Invalid connection strategy")
-	return
+	return nil, errInvalidStrategy
 }

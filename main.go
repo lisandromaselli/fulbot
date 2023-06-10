@@ -12,5 +12,6 @@ func main() {
 		log.Error().Msg("Error creating the app, shutting down")
 		return
 	}
+
 	app.Run()
 }

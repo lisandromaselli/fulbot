@@ -20,6 +20,7 @@ func (c CommandHandler) CheckUpdate(update tgbotapi.Update) bool {
 		update.Message.Command() == c.command {
 		return true
 	}
+
 	return false
 }
 
@@ -45,6 +46,7 @@ func (c CallbackQueryHandler) CheckUpdate(update tgbotapi.Update) bool {
 	if update.CallbackQuery != nil && c.patternFunc(update) {
 		return true
 	}
+
 	return false
 }
 

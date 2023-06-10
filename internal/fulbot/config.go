@@ -1,7 +1,9 @@
 package fulbot
 
 import (
-	"fulbot/internal/pkg/telegram"
+	"fmt"
+
+	"fulbot/internal/gateways/telegram"
 
 	"github.com/openware/pkg/ika"
 )
@@ -15,10 +17,17 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	cfg := &Config{}
-	if err := ika.ReadConfig("", cfg); err != nil {
-		return nil, err
+	cfg := &Config{
+		TelegramToken:      "",
+		Port:               "",
+		Domain:             "",
+		WebhookSecretPath:  "",
+		ConnectionStrategy: "",
 	}
+	if err := ika.ReadConfig("", cfg); err != nil {
+		return nil, fmt.Errorf("error loading config: %w", err)
+	}
+
 	return cfg, nil
 }
 

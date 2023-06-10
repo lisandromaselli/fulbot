@@ -1,7 +1,7 @@
 package telegram
 
 import (
-	"net/http"
+	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -18,19 +18,23 @@ type WebHookConfig struct {
 
 func NewBot(token string) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
-	bot.Debug = true
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannto build bot: %w", err)
 	}
+
+	bot.Debug = true
+
 	return &Bot{
 		Client: bot,
 	}, nil
 }
 
 func (t *Bot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	u.AllowedUpdates = []string{
+	log.Info().Msg("Starting telegram pooling")
+
+	update := tgbotapi.NewUpdate(0)
+	update.Timeout = 60
+	update.AllowedUpdates = []string{
 		tgbotapi.UpdateTypeMessage,
 		tgbotapi.UpdateTypeEditedMessage,
 		tgbotapi.UpdateTypeChannelPost,
@@ -46,23 +50,25 @@ func (t *Bot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 		tgbotapi.UpdateTypeChatMember,
 	}
 
-	return t.Client.GetUpdatesChan(u), nil
+	return t.Client.GetUpdatesChan(update), nil
 }
 
 func (t *Bot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChannel, error) {
+	log.Info().Msg("Starting telegram webhook")
+
 	wh, err := tgbotapi.NewWebhook(config.Domain + config.WebhookSecretPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot start webhook server %w", err)
 	}
 
 	err = suscribeWebhook(t.Client, wh)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Info().Msg("Successfully suscribed to the webhook")
 
 	updates := t.Client.ListenForWebhook(config.WebhookSecretPath)
-	go http.ListenAndServe(":"+config.Port, nil)
 
 	return updates, nil
 }
@@ -70,16 +76,17 @@ func (t *Bot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChanne
 func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) error {
 	_, err := bot.Request(wh)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannto suscribe webhook: %w", err)
 	}
 
 	info, err := bot.GetWebhookInfo()
 	if err != nil {
-		return err
+		return fmt.Errorf("cannto get webhook info: %w", err)
 	}
 
 	if info.LastErrorDate != 0 {
 		log.Info().Msgf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
+
 	return nil
 }

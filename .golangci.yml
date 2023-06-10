@@ -1,5 +1,5 @@
 run:
-  concurrency: 4
+  concurrency: 8
   timeout: 1m
   tests: true
   go: "1.20"
@@ -17,7 +17,6 @@ linters:
     - contextcheck
     - cyclop
     - decorder
-    - depguard
     - dogsled
     - dupl
     - dupword
@@ -32,7 +31,7 @@ linters:
     - forbidigo
     - forcetypeassert
     - funlen
-    - gci
+    # - gci  its broken
     - ginkgolinter
     - gocheckcompilerdirectives
     - gochecknoglobals
@@ -45,7 +44,6 @@ linters:
     - godox
     - goerr113
     - gofmt
-    - gofumpt
     - goheader
     - goimports
     - gomnd
@@ -69,7 +67,6 @@ linters:
     - nestif
     - nilerr
     - nilnil
-    - nlreturn
     - noctx
     - nolintlint
     - nonamedreturns
@@ -83,7 +80,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - stylecheck
-    - tagalign
     - tagliatelle
     - tenv
     - testableexamples

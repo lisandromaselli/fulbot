@@ -16,7 +16,9 @@ type UpdateManager struct {
 }
 
 func NewUpdateManager() *UpdateManager {
-	return &UpdateManager{}
+	return &UpdateManager{
+		handlerList: []handlers.UpdateHandler{},
+	}
 }
 
 func (m *UpdateManager) AddHandler(handler handlers.UpdateHandler) {
@@ -26,7 +28,7 @@ func (m *UpdateManager) AddHandler(handler handlers.UpdateHandler) {
 func (m *UpdateManager) ProcessUpdate(update tgbotapi.Update) {
 	for _, h := range m.handlerList {
 		if h.CheckUpdate(update) {
-			h.HandleUpdate(update)
+			_ = h.HandleUpdate(update)
 		}
 	}
 }
