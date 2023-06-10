@@ -33,7 +33,8 @@ type CallbackQueryHandler struct {
 }
 
 func NewCallbackQueryHandler(patternFunc func(tgbotapi.Update) bool,
-	callbackFunc func(tgbotapi.Update) error) CallbackQueryHandler {
+	callbackFunc func(tgbotapi.Update) error,
+) CallbackQueryHandler {
 	return CallbackQueryHandler{
 		patternFunc:  patternFunc,
 		callbackFunc: callbackFunc,

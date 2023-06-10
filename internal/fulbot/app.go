@@ -2,6 +2,7 @@ package fulbot
 
 import (
 	"errors"
+
 	"fulbot/internal/fulbot/handlers/callbacksquery"
 	"fulbot/internal/fulbot/handlers/commands"
 	"fulbot/internal/pkg/telegram"

@@ -2,6 +2,7 @@ package callbacksquery
 
 import (
 	"fmt"
+
 	"fulbot/internal/fulbot/handlers"
 	"fulbot/internal/pkg/telegram"
 

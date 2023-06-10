@@ -46,8 +46,8 @@ func (t *TelegramBot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 	}
 
 	return t.Client.GetUpdatesChan(u), nil
-
 }
+
 func (t *TelegramBot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChannel, error) {
 	wh, err := tgbotapi.NewWebhook(config.Domain + config.WebhookSecretPath)
 	if err != nil {
