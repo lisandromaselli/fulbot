@@ -15,7 +15,7 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	),
 )
 
-func NewMatchCommand(bot *telegram.TelegramBot) handlers.UpdateHandler {
+func NewMatchCommand(bot *telegram.Bot) handlers.UpdateHandler {
 	return handlers.NewCommandHandler("match", func(u tgbotapi.Update) error {
 		msg := tgbotapi.NewMessage(u.Message.Chat.ID, u.Message.Text)
 		msg.ReplyMarkup = numericKeyboard

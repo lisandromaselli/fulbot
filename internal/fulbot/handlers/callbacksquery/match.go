@@ -1,15 +1,14 @@
 package callbacksquery
 
 import (
-	"fmt"
-
 	"fulbot/internal/fulbot/handlers"
 	"fulbot/internal/pkg/telegram"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/rs/zerolog/log"
 )
 
-func NewCallbackQueryMatch(bot *telegram.TelegramBot) handlers.UpdateHandler {
+func NewCallbackQueryMatch(bot *telegram.Bot) handlers.UpdateHandler {
 	return handlers.NewCallbackQueryHandler(dummyPattern, func(u tgbotapi.Update) error {
 		// Respond to the callback query, telling Telegram to show the user
 		// a message with the data received.
@@ -29,6 +28,6 @@ func NewCallbackQueryMatch(bot *telegram.TelegramBot) handlers.UpdateHandler {
 
 func dummyPattern(update tgbotapi.Update) bool {
 	data := update.CallbackData()
-	fmt.Printf("data: %v\n", data)
+	log.Info().Msgf("data: %v\n", data)
 	return true
 }

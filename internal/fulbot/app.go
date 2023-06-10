@@ -25,7 +25,7 @@ func (app *App) Run() {
 		return
 	}
 
-	bot, err := telegram.NewTelegramBot(config.TelegramToken)
+	bot, err := telegram.NewBot(config.TelegramToken)
 	if err != nil {
 		log.Error().Err(err).Msg("Error building telegram bot")
 		return
@@ -47,7 +47,7 @@ func (app *App) Run() {
 	consumer.Run()
 }
 
-func openUpdatesConnection(bot *telegram.TelegramBot, config *Config) (updates tgbotapi.UpdatesChannel, err error) {
+func openUpdatesConnection(bot *telegram.Bot, config *Config) (updates tgbotapi.UpdatesChannel, err error) {
 	if config.ConnectionStrategy == "WEBHOOK" {
 		log.Info().Msg("Starting telegram webhook")
 		updates, err = bot.StartTelegramWebHook(config.TelegramWebHookConfig())

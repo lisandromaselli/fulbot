@@ -1,13 +1,14 @@
 package telegram
 
 import (
-	"log"
 	"net/http"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"github.com/rs/zerolog/log"
 )
 
-type TelegramBot struct {
+type Bot struct {
 	Client *tgbotapi.BotAPI
 }
 
@@ -15,18 +16,18 @@ type WebHookConfig struct {
 	Port, Domain, WebhookSecretPath string
 }
 
-func NewTelegramBot(token string) (*TelegramBot, error) {
+func NewBot(token string) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	bot.Debug = true
 	if err != nil {
 		return nil, err
 	}
-	return &TelegramBot{
+	return &Bot{
 		Client: bot,
 	}, nil
 }
 
-func (t *TelegramBot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
+func (t *Bot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	u.AllowedUpdates = []string{
@@ -48,7 +49,7 @@ func (t *TelegramBot) StartTegramDaemon() (tgbotapi.UpdatesChannel, error) {
 	return t.Client.GetUpdatesChan(u), nil
 }
 
-func (t *TelegramBot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChannel, error) {
+func (t *Bot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.UpdatesChannel, error) {
 	wh, err := tgbotapi.NewWebhook(config.Domain + config.WebhookSecretPath)
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func (t *TelegramBot) StartTelegramWebHook(config WebHookConfig) (tgbotapi.Updat
 	if err != nil {
 		return nil, err
 	}
-	log.Print("Successfully suscribed to the webhook")
+	log.Info().Msg("Successfully suscribed to the webhook")
 
 	updates := t.Client.ListenForWebhook(config.WebhookSecretPath)
 	go http.ListenAndServe(":"+config.Port, nil)
@@ -78,7 +79,7 @@ func suscribeWebhook(bot *tgbotapi.BotAPI, wh tgbotapi.WebhookConfig) error {
 	}
 
 	if info.LastErrorDate != 0 {
-		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+		log.Info().Msgf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 	return nil
 }

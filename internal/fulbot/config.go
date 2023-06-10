@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	TelegramToken      string `env:"TELEGRAM_TOKEN" env-required:""`
+	TelegramToken      string `env:"TELEGRAM_TOKEN" env-required:"true"`
 	Port               string `env:"PORT"`
 	Domain             string `env:"DOMAIN"`
 	WebhookSecretPath  string `env:"WEBHOOOK_SECRET_PATH"`
