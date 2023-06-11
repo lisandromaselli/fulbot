@@ -1,10 +1,14 @@
 package handlers
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	telegram "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type UpdateHandler interface {
-	CheckUpdate(tgbotapi.Update) bool
-	HandleUpdate(tgbotapi.Update) error
+type TelegramUpdateHandler interface {
+	Handle(telegram.Update) error
+}
+
+type TelegramCommandHandler interface {
+	TelegramUpdateHandler
+	Suscribe() string
 }

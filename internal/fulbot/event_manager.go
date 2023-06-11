@@ -1,34 +1,65 @@
 package fulbot
 
 import (
+	"errors"
 	"fulbot/internal/fulbot/handlers"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	telegram "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type EventManager interface {
-	AddHandler(handler handlers.UpdateHandler)
-	ProcessUpdate(update tgbotapi.Update)
+var errDuplicateCommandHandler = errors.New("duplicated command handler")
+
+type TelegramEventManager struct {
+	commandMap       map[string]handlers.TelegramCommandHandler
+	callbackQHandler handlers.TelegramUpdateHandler
 }
 
-type UpdateManager struct {
-	handlerList []handlers.UpdateHandler
-}
-
-func NewUpdateManager() *UpdateManager {
-	return &UpdateManager{
-		handlerList: []handlers.UpdateHandler{},
+func NewTelegramEventManager(cbh handlers.TelegramUpdateHandler) *TelegramEventManager {
+	return &TelegramEventManager{
+		commandMap:       map[string]handlers.TelegramCommandHandler{},
+		callbackQHandler: cbh,
 	}
 }
 
-func (m *UpdateManager) AddHandler(handler handlers.UpdateHandler) {
-	m.handlerList = append(m.handlerList, handler)
+func (em *TelegramEventManager) AddCommandHandler(handler handlers.TelegramCommandHandler) error {
+	_, ok := em.commandMap[handler.Suscribe()]
+	if ok {
+		return errDuplicateCommandHandler
+	}
+
+	em.commandMap[handler.Suscribe()] = handler
+
+	return nil
 }
 
-func (m *UpdateManager) ProcessUpdate(update tgbotapi.Update) {
-	for _, h := range m.handlerList {
-		if h.CheckUpdate(update) {
-			_ = h.HandleUpdate(update)
+func (em *TelegramEventManager) ProcessUpdate(update telegram.Update) {
+	commands := []struct {
+		check   func() bool
+		command func() string
+	}{
+		{
+			check:   func() bool { return update.Message != nil && update.Message.IsCommand() },
+			command: update.Message.Command},
+		{check: func() bool { return update.EditedMessage != nil && update.EditedMessage.IsCommand() },
+			command: update.EditedMessage.Command},
+		{check: func() bool { return update.ChannelPost != nil && update.ChannelPost.IsCommand() },
+			command: update.ChannelPost.Command},
+		{check: func() bool { return update.EditedChannelPost != nil && update.EditedChannelPost.IsCommand() },
+			command: update.EditedChannelPost.Command},
+	}
+
+	for _, cmd := range commands {
+		if cmd.check() {
+			if h, ok := em.commandMap[cmd.command()]; ok {
+				// TODO: handle errors of update handlers
+				_ = h.Handle(update)
+				return
+			}
 		}
+	}
+
+	if update.CallbackQuery != nil {
+		_ = em.callbackQHandler.Handle(update)
+		return
 	}
 }

@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"fulbot/internal/fulbot/handlers/callbacksquery"
+	"fulbot/internal/fulbot/handlers"
 	"fulbot/internal/fulbot/handlers/commands"
 	"fulbot/internal/gateways/telegram"
-
-	"github.com/rs/zerolog/log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -17,38 +15,42 @@ var errInvalidStrategy = errors.New("invalid connection strategy")
 
 type App struct{}
 
-func NewApp() (App, error) {
-	return App{}, nil
+func NewApp() (*App, error) {
+	return &App{}, nil
 }
 
-func (app *App) Run() {
+func (app *App) Run() error {
 	config, err := LoadConfig()
 	if err != nil {
-		log.Error().Err(err).Msg("Error loading config")
-		return
+		return fmt.Errorf("error loading config %w", err)
 	}
 
 	bot, err := telegram.NewBot(config.TelegramToken)
 	if err != nil {
-		log.Error().Err(err).Msg("Error building telegram bot")
-		return
+		return fmt.Errorf("error building telegram bot %w", err)
 	}
 
 	updates, err := openUpdatesConnection(bot, config)
 	if err != nil {
-		log.Error().Err(err).Msg("Error opening updates connection")
-		return
+		return fmt.Errorf("error opening updates connection %w", err)
 	}
 
-	manager := NewUpdateManager()
-	manager.AddHandler(commands.NewHiCommand(bot))
-	manager.AddHandler(commands.NewMatchCommand(bot))
-	manager.AddHandler(callbacksquery.NewCallbackQueryMatch(bot))
+	manager := NewTelegramEventManager(handlers.NewCallbackQuery(bot))
 
-	log.Info().Msg("Starting event listening")
+	err = manager.AddCommandHandler(commands.NewHiCommand(bot))
+	if err != nil {
+		return err
+	}
+
+	err = manager.AddCommandHandler(commands.NewMatchCommand(bot))
+	if err != nil {
+		return err
+	}
 
 	consumer := NewUpdateConsumer(updates, manager)
 	consumer.Run()
+
+	return nil
 }
 
 func openUpdatesConnection(bot *telegram.Bot, config *Config) (tgbotapi.UpdatesChannel, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fulbot/internal/fulbot"
+	"os"
 
 	"github.com/rs/zerolog/log"
 )
@@ -9,9 +10,13 @@ import (
 func main() {
 	app, err := fulbot.NewApp()
 	if err != nil {
-		log.Error().Msg("Error creating the app, shutting down")
+		log.Error().Msgf("Error creating the app, shutting down: %s", err)
 		return
 	}
 
-	app.Run()
+	err = app.Run()
+	if err != nil {
+		log.Error().Msg(err.Error())
+		os.Exit(1)
+	}
 }

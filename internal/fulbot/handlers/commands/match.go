@@ -3,13 +3,12 @@ package commands
 import (
 	"fmt"
 
-	"fulbot/internal/fulbot/handlers"
 	"fulbot/internal/gateways/telegram"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func NewMatchCommand(bot *telegram.Bot) handlers.UpdateHandler {
+func NewMatchCommand(bot *telegram.Bot) CommandHandler {
 	numericKeyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("create", "match_create"),
@@ -18,7 +17,7 @@ func NewMatchCommand(bot *telegram.Bot) handlers.UpdateHandler {
 		),
 	)
 
-	return handlers.NewCommandHandler("match", func(u tgbotapi.Update) error {
+	return NewCommandHandler("match", func(u tgbotapi.Update) error {
 		msg := tgbotapi.NewMessage(u.Message.Chat.ID, u.Message.Text)
 		msg.ReplyMarkup = numericKeyboard
 		if _, err := bot.Client.Send(msg); err != nil {
